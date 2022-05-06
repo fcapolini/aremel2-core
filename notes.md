@@ -93,3 +93,12 @@ tsconfig.json:
 "mochaExplorer.files": "test/**/*.ts",
 "mochaExplorer.require": "ts-node/register"
 ```
+
+## JavaScript processing
+
+```bash
+npm i escodegen esprima estraverse
+npm i -D @types/escodegen @types/esprima @types/estraverse
+```
+
+[JavaScript Proxy Objects](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy)
