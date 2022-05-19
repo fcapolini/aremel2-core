@@ -1,32 +1,43 @@
-import Context from "./Context";
-import Value from "./Value";
+import Value, { ValueProps } from "./Value";
+
+export interface ScopeProps {
+	name?: string;
+	values?: ValueProps[];
+}
 
 export default class Scope {
-	context: Context;
+	root: Scope;
 	parent?: Scope;
-	name?: string;
+	props: ScopeProps;
 	children: Scope[];
 	values: Map<string, Value>;
 
-	constructor(context: Context, parent?: Scope, name?: string) {
-		this.context = context;
+	constructor(parent?: Scope, props?: ScopeProps, cb?: (that: Scope) => void) {
+		this.root = parent ? parent.root : this;
 		this.parent = parent;
-		this.name = name;
+		this.props = props ?? {};
 		this.children = [];
 		this.values = new Map();
+		props?.values?.forEach((valueProps, index) => {
+			// anonymous values get a '0'-prefixed name not to conflict w/ named ones
+			const name = (valueProps.name ? valueProps.name : `0${index}`);
+			this.values.set(name, new Value(this, valueProps));
+		});
+		if (parent) {
+			parent.children.push(this);
+		}
+		cb ? cb(this) : null;
 	}
 
-	lookup(name: string): Scope | Value | undefined {
-		const value = this.values.get(name);
-		if (value) {
-			return value;
-		}
-		if (this.name === name) {
-			return this;
-		}
-		if (this.parent) {
-			return this.parent.lookup(name);
-		}
-		return undefined;
+	// ===========================================================================
+	// private
+	// ===========================================================================
+
+	_lookupName(name: string): Scope | Value | undefined {
+		let ret: Scope | Value | undefined = this.values.get(name);
+		!ret && this.props.name === name ? ret = this : null;
+		!ret && this.parent ? ret = this.parent._lookupName(name) : null;
+		return ret;
 	}
+
 }
